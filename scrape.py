@@ -1,6 +1,7 @@
 import csv
 import requests
 from bs4 import BeautifulSoup
+import os
 
 input_csv_path = 'links.csv'
 output_csv_path = 'downloaded_content.csv'
@@ -23,8 +24,15 @@ with open(input_csv_path, mode='r', newline='', encoding='utf-8') as csvfile:
     reader = csv.reader(csvfile)
     urls = list(reader)
 
+# Check if file exists and has content already
+file_exists = os.path.isfile(output_csv_path) and os.path.getsize(output_csv_path) > 0
+
 with open(output_csv_path, mode='a', newline='', encoding='utf-8') as csvfile:
     writer = csv.writer(csvfile)
+    
+    # If the file is being created for the first time, write column names
+    if not file_exists:
+        writer.writerow(['URL', 'Content'])  # Column names
     
     for index, row in enumerate(urls[start_row:], start=start_row):
         url = row[0]
@@ -40,7 +48,8 @@ with open(output_csv_path, mode='a', newline='', encoding='utf-8') as csvfile:
             
             clean_content = body_content.replace('\n', ' ').replace('\r', ' ').strip().rstrip("'").rstrip('"')
             
-            writer.writerow([clean_content[:10000000]])  # Ensure the content is a single cell
+            # Writing URL and cleaned content to the output CSV
+            writer.writerow([url, clean_content[:10000000]])  # Content limited to fit in cell
             
             save_progress(index)
         except requests.RequestException as e:
